@@ -1,7 +1,7 @@
 #include "parameters.h"
 
 bool odom_only;
-std::string odom_header_frame_id, odom_child_frame_id;
+std::string cloud_header_frame_id, map_header_frame_id, odom_header_frame_id, odom_child_frame_id;
 
 bool is_first_frame = true;
 double lidar_end_time = 0.0, first_lidar_time = 0.0, time_con = 0.0;
@@ -36,8 +36,10 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     p_pre.reset(new Preprocess());
 
     nh->declare_parameter<bool>("odom_only", false);
-    nh->declare_parameter<std::string>("odom_header_frame_id", "camera_init");
-    nh->declare_parameter<std::string>("odom_child_frame_id", "aft_mapped");
+    nh->declare_parameter<std::string>("odom_header_frame_id", "odom");
+    nh->declare_parameter<std::string>("odom_child_frame_id", "base_link");
+    nh->declare_parameter<std::string>("map_header_frame_id", "map");
+    nh->declare_parameter<std::string>("cloud_header_frame_id", "cloud");
 
     nh->declare_parameter<bool>("prop_at_freq_of_imu", true);
     nh->declare_parameter<bool>("use_imu_as_input", true);

@@ -10,6 +10,8 @@
 #include "preprocess.h"
 
 extern bool odom_only;
+extern std::string cloud_header_frame_id;
+extern std::string map_header_frame_id;
 extern std::string odom_header_frame_id;
 extern std::string odom_child_frame_id;
 
