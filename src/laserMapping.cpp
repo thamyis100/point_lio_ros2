@@ -639,8 +639,16 @@ void set_twist(T &out) {
     }
 }
 
-void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pubOdomAftMapped,
-                      std::shared_ptr<tf2_ros::TransformBroadcaster> &tf_br) {
+void publish_odometry(
+    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pubOdomAftMapped,
+    std::shared_ptr<tf2_ros::TransformBroadcaster> &tf_br)
+{
+    // Name of the map frame you want to publish (can make this a member/param)
+    const std::string map_frame_id = "map"; // or use member variable if you have one
+
+    // keep existing odom frame and child names (assumed members)
+    // odom_header_frame_id  -> parent frame for odom->base (e.g., "odom")
+    // odom_child_frame_id   -> child frame for odom->base (e.g., "base_link")
 
     odomAftMapped.header.frame_id = odom_header_frame_id;
     odomAftMapped.child_frame_id = odom_child_frame_id;
@@ -650,31 +658,30 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     } else {
         odomAftMapped.header.stamp = get_ros_time(lidar_end_time);
     }
+
     set_posestamp(odomAftMapped.pose.pose);
     set_twist(odomAftMapped.twist.twist);
 
-    if (odom_only){
+    if (odom_only) {
         Matrix3d cov = kf_output.get_P().block<3, 3>(0, 0);
-
-        // Get the position components (first 3x3)
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 odomAftMapped.pose.covariance[6 * i + j] = cov(i, j);
             }
         }
+        odomAftMapped.pose.covariance[21] = 0.0;    // roll
+        odomAftMapped.pose.covariance[28] = 0.0;    // pitch
+        odomAftMapped.pose.covariance[35] = 0.05;   // yaw
 
-        odomAftMapped.pose.covariance[21] = 0.0;    // Covariance for roll
-        odomAftMapped.pose.covariance[28] = 0.0;    // Covariance for pitch
-        odomAftMapped.pose.covariance[35] = 0.05;   // Covariance for yaw
-
-        odomAftMapped.twist.covariance[0] = 0.1;    // Covariance for linear velocity on x
-        odomAftMapped.twist.covariance[7] = 0.1;    // Covariance for linear velocity on y
-        odomAftMapped.twist.covariance[14] = 0.0;   // Covariance for linear velocity on z
-        odomAftMapped.twist.covariance[21] = 0.0;  // Covariance for angular velocity (roll)
-        odomAftMapped.twist.covariance[28] = 0.0;  // Covariance for angular velocity (pitch)
-        odomAftMapped.twist.covariance[35] = 0.05;  // Covariance for angular velocity (yaw)
+        odomAftMapped.twist.covariance[0] = 0.1;
+        odomAftMapped.twist.covariance[7] = 0.1;
+        odomAftMapped.twist.covariance[14] = 0.0;
+        odomAftMapped.twist.covariance[21] = 0.0;
+        odomAftMapped.twist.covariance[28] = 0.0;
+        odomAftMapped.twist.covariance[35] = 0.05;
     }
 
+    // 1) publish odometry message
     pubOdomAftMapped->publish(odomAftMapped);
 
     //static tf2_ros::TransformBroadcaster br = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
@@ -701,14 +708,47 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     transformed_quaternion.normalize();
 
     transform.transform.rotation.x = transformed_quaternion.x();
-    transform.transform.rotation.y = transformed_quaternion.y();
-    transform.transform.rotation.z = transformed_quaternion.z();
+    transform.transform.rotation.y = -transformed_quaternion.y();
+    transform.transform.rotation.z = -transformed_quaternion.z();
     transform.transform.rotation.w = transformed_quaternion.w();
 
     transform.header.stamp = odomAftMapped.header.stamp;
 
     tf_br->sendTransform(transform);
+
+    // 3) compute map -> odom = (map -> base) * inv(odom -> base)
+    //    T_map_base is taken from odomAftMapped.pose (assumed expressed in map frame)
+    //    T_odom_base is the transform just published
+    //    We skip publishing if map_frame == odom_frame to avoid self-transform.
+
+    // publish flipped map->odom (180deg roll) so map == odom but rotated around X
+    geometry_msgs::msg::TransformStamped map_to_odom;
+    map_to_odom.header.stamp = odomAftMapped.header.stamp;  // same timestamp
+    // use configured frame id variables so this truly represents map == odom
+    map_to_odom.header.frame_id = map_frame_id;    // parent ("map")
+    map_to_odom.child_frame_id = odom_header_frame_id;    // child (configured odom frame)
+
+    map_to_odom.transform.translation.x = 0.0;
+    map_to_odom.transform.translation.y = 0.0;
+    map_to_odom.transform.translation.z = 0.0;
+    // quaternion for 180deg roll (pi radians) around X
+    tf2::Quaternion q_flip;
+    q_flip.setRPY(0.0, 0.0, 0.0);
+    q_flip.normalize();
+    map_to_odom.transform.rotation.x = q_flip.x();
+    map_to_odom.transform.rotation.y = q_flip.y();
+    map_to_odom.transform.rotation.z = q_flip.z();
+    // map_to_odom.transform.rotation.x = 0.0;
+    // map_to_odom.transform.rotation.y = 0.0;
+    // map_to_odom.transform.rotation.z = 0.0;
+    // map_to_odom.transform.rotation.w = 1.0; //correct but mismatch laserscan with map
+    map_to_odom.transform.rotation.w = q_flip.w();
+    // publish (use same tf broadcaster you already have)
+    tf_br->sendTransform(map_to_odom);
+
 }
+
+
 
 void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath) {
 
