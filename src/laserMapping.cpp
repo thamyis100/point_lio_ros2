@@ -741,8 +741,9 @@ void publish_odometry(
     // map_to_odom.transform.rotation.x = 0.0;
     // map_to_odom.transform.rotation.y = 0.0;
     // map_to_odom.transform.rotation.z = 0.0;
-    // map_to_odom.transform.rotation.w = 1.0; //correct but mismatch laserscan with map
-    map_to_odom.transform.rotation.w = q_flip.w();
+    map_to_odom.transform.rotation.w = 1.0; //correct but mismatch laserscan with map
+    // map_to_odom.transform.rotation.w = 0.1;
+    // map_to_odom.transform.rotation.w = q_flip.w();
     // publish (use same tf broadcaster you already have)
     tf_br->sendTransform(map_to_odom);
 

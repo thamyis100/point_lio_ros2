@@ -37,7 +37,7 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
 
     nh->declare_parameter<bool>("odom_only", false);
     nh->declare_parameter<std::string>("odom_header_frame_id", "odom");
-    nh->declare_parameter<std::string>("odom_child_frame_id", "base_link");
+    nh->declare_parameter<std::string>("odom_child_frame_id", "laser_frame");
     nh->declare_parameter<std::string>("map_header_frame_id", "map");
     nh->declare_parameter<std::string>("cloud_header_frame_id", "cloud");
 
