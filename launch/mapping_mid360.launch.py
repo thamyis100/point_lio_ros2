@@ -7,6 +7,11 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='false',
+        description='Use simulation time'
+    )
     # Declare the RViz argument
     rviz_arg = DeclareLaunchArgument(
         'rviz', default_value='true',
