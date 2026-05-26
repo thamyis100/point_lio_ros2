@@ -745,7 +745,9 @@ void publish_odometry(
     // map_to_odom.transform.rotation.w = 0.1;
     // map_to_odom.transform.rotation.w = q_flip.w();
     // publish (use same tf broadcaster you already have)
-    tf_br->sendTransform(map_to_odom);
+    if (publish_map_to_odom_tf) {
+        tf_br->sendTransform(map_to_odom);
+    }
 
 }
 

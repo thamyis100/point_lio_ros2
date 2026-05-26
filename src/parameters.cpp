@@ -2,6 +2,7 @@
 
 bool odom_only;
 std::string cloud_header_frame_id, map_header_frame_id, odom_header_frame_id, odom_child_frame_id;
+bool publish_map_to_odom_tf = true;
 
 bool is_first_frame = true;
 double lidar_end_time = 0.0, first_lidar_time = 0.0, time_con = 0.0;
@@ -40,6 +41,7 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->declare_parameter<std::string>("odom_child_frame_id", "laser_frame");
     nh->declare_parameter<std::string>("map_header_frame_id", "map");
     nh->declare_parameter<std::string>("cloud_header_frame_id", "cloud");
+    nh->declare_parameter<bool>("publish_map_to_odom_tf", true);
 
     nh->declare_parameter<bool>("prop_at_freq_of_imu", true);
     nh->declare_parameter<bool>("use_imu_as_input", true);
@@ -100,6 +102,7 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->get_parameter("odom_only", odom_only);
     nh->get_parameter("odom_header_frame_id", odom_header_frame_id);
     nh->get_parameter("odom_child_frame_id", odom_child_frame_id);
+    nh->get_parameter("publish_map_to_odom_tf", publish_map_to_odom_tf);
 
     nh->get_parameter("prop_at_freq_of_imu", prop_at_freq_of_imu);
     nh->get_parameter("use_imu_as_input", use_imu_as_input);

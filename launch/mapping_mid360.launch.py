@@ -45,7 +45,7 @@ def generate_launch_description():
         executable='pointlio_mapping',
         name='laserMapping',
         output='screen',
-        parameters=laser_mapping_params,
+        parameters=laser_mapping_params + [{'use_sim_time': use_sim_time}],
         # prefix='gdb -ex run --args'
     )
 
@@ -59,11 +59,13 @@ def generate_launch_description():
             'rviz_cfg', 'loam_livox.rviz'
         ])],
         condition=IfCondition(LaunchConfiguration('rviz')),
-        prefix='nice'
+        prefix='nice',
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     # Assemble the launch description
     ld = LaunchDescription([
+        use_sim_time_arg,
         rviz_arg,
         laser_mapping_node,
         GroupAction(
