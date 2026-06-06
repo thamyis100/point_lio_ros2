@@ -841,7 +841,7 @@ int main(int argc, char **argv) {
     } else {
     sub_pcl = nh->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::SensorDataQoS(), standard_pcl_cbk);
     }
-    auto sub_imu = nh->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 200000, imu_cbk);
+    auto sub_imu = nh->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 1000, imu_cbk);
 
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFullRes;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFullRes_body;
@@ -851,25 +851,25 @@ int main(int argc, char **argv) {
 
     if (!odom_only){
         pubLaserCloudFullRes = nh->create_publisher<sensor_msgs::msg::PointCloud2>
-                ("/cloud_registered", 100000);
+                ("/cloud_registered", 10);
         pubLaserCloudFullRes_body = nh->create_publisher<sensor_msgs::msg::PointCloud2>
-                ("/cloud_registered_body", 100000);
+                ("/cloud_registered_body", 10);
         pubLaserCloudEffect = nh->create_publisher<sensor_msgs::msg::PointCloud2>
-                ("/cloud_effected", 100000);
+                ("/cloud_effected", 5);
         pubLaserCloudMap = nh->create_publisher<sensor_msgs::msg::PointCloud2>
-                ("/Laser_map", 100000);
+                ("/Laser_map", 10);
         pubPath = nh->create_publisher<nav_msgs::msg::Path>
-                ("/path", 100000);
+                ("/path", 5);
     }
 
     // Choose topic name depending on odom_only value
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped;
     if (odom_only){
         pubOdomAftMapped = nh->create_publisher<nav_msgs::msg::Odometry>
-                ("/odom_corrected", 100000);
+                ("/odom_corrected", 50);
     } else {
         pubOdomAftMapped = nh->create_publisher<nav_msgs::msg::Odometry>
-                ("/odom", 100000);
+                ("/odom", 50);
     }
 
     //auto plane_pub = nh->create_publisher<visualization_msgs::msg::Marker>
